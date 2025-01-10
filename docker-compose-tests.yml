@@ -1,0 +1,41 @@
+services:
+  tests:
+    build:
+      dockerfile: Dockerfile-tests
+      context: .
+    restart: "no"
+    depends_on:
+      - tests-db
+      - tests-minio
+    env_file:
+      - .env.tests
+    links:
+      - tests-db
+    networks:
+      - tests-app-network
+
+  tests-db:
+    container_name: test_task_tests_db
+    build:
+      context: .
+      dockerfile: Dockerfile-db
+    restart: always
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    networks:
+      - tests-app-network
+
+  tests-minio:
+    container_name: test_task_tests_minio
+    image: minio/minio
+    command: server /data
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY}
+    networks:
+      - tests-app-network
+
+networks:
+  tests-app-network:
